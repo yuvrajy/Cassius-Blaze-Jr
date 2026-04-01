@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cassius Blaze Jr. — Commentator. Performer. Presence.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e4c97e;
+      --gold-dim: rgba(201, 168, 76, 0.15);
+      --black: #060608;
+      --dark: #0d0d10;
+      --dark-2: #111115;
+      --dark-3: #18181e;
+      --white: #f5f3ee;
+      --gray: #8a8a96;
+      --gray-light: #bbbbc4;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--black); }
+    ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 60px;
+      background: linear-gradient(to bottom, rgba(6,6,8,0.95) 0%, transparent 100%);
+      backdrop-filter: blur(2px);
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+    .nav-links {
+      display: flex;
+      gap: 40px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--gray-light);
+      text-decoration: none;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative;
+      height: 100vh;
+      min-height: 700px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('Snapchat-2069494671.jpg');
+      background-size: cover;
+      background-position: center top;
+      filter: brightness(0.35) contrast(1.1);
+      transform: scale(1.04);
+      transition: transform 8s ease;
+    }
+    #hero:hover .hero-bg { transform: scale(1.0); }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(6,6,8,0.3) 40%,
+        rgba(6,6,8,0.85) 75%,
+        var(--black) 100%
+      );
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 0 60px 80px;
+      max-width: 900px;
+    }
+    .hero-eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 22px;
+      font-weight: 500;
+    }
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(4rem, 9vw, 8.5rem);
+      font-weight: 300;
+      line-height: 0.92;
+      letter-spacing: -0.01em;
+      margin-bottom: 24px;
+      color: var(--white);
+    }
+    .hero-title span { color: var(--gold); }
+    .hero-sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+      font-weight: 300;
+      font-style: italic;
+      letter-spacing: 0.06em;
+      color: var(--gray-light);
+      margin-bottom: 30px;
+    }
+    .hero-intro {
+      font-size: 0.82rem;
+      line-height: 1.9;
+      color: var(--gray);
+      max-width: 560px;
+      letter-spacing: 0.03em;
+    }
+    .hero-scroll {
+      position: absolute;
+      bottom: 36px;
+      right: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: var(--gold);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+    }
+    .hero-scroll::after {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 60px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+
+    /* ── SECTION SHARED ── */
+    section { padding: 120px 60px; }
+    .section-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 4vw, 3.8rem);
+      font-weight: 300;
+      line-height: 1.1;
+      margin-bottom: 32px;
+      color: var(--white);
+    }
+    .gold-rule {
+      width: 60px;
+      height: 1px;
+      background: var(--gold);
+      margin-bottom: 40px;
+    }
+
+    /* ── ABOUT ── */
+    #about {
+      background: var(--dark);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .about-image-wrap {
+      position: relative;
+    }
+    .about-image-wrap img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+      filter: brightness(0.9) contrast(1.05);
+    }
+    .about-image-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -16px 16px 16px -16px;
+      border: 1px solid var(--gold-dim);
+      z-index: -1;
+    }
+    .about-image-wrap::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, var(--dark), transparent);
+    }
+    .about-text p {
+      font-size: 0.88rem;
+      line-height: 2;
+      color: var(--gray-light);
+      margin-bottom: 20px;
+      letter-spacing: 0.02em;
+    }
+    .about-stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 48px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(201,168,76,0.15);
+    }
+    .about-stat-item {}
+    .about-stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem;
+      font-weight: 300;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .about-stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+
+    /* ── HIGHLIGHTS ── */
+    #highlights {
+      background: var(--black);
+    }
+    .highlights-header {
+      max-width: 600px;
+      margin-bottom: 72px;
+    }
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+    }
+    .highlight-card {
+      background: var(--dark-2);
+      padding: 44px 36px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+    .highlight-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 2px;
+      background: transparent;
+      transition: background 0.3s;
+    }
+    .highlight-card:hover { background: var(--dark-3); }
+    .highlight-card:hover::before { background: var(--gold); }
+    .highlight-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3.5rem;
+      font-weight: 300;
+      color: var(--gold-dim);
+      line-height: 1;
+      margin-bottom: 16px;
+      transition: color 0.3s;
+    }
+    .highlight-card:hover .highlight-num { color: rgba(201,168,76,0.3); }
+    .highlight-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .highlight-desc {
+      font-size: 0.8rem;
+      line-height: 1.75;
+      color: var(--gray);
+    }
+
+    /* ── PHILOSOPHY ── */
+    #philosophy {
+      background: var(--dark-2);
+      text-align: center;
+      padding: 140px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    #philosophy::before {
+      content: '\201C';
+      position: absolute;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30rem;
+      color: rgba(201,168,76,0.04);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+    .philosophy-quote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.6rem, 3.5vw, 3rem);
+      font-weight: 300;
+      font-style: italic;
+      line-height: 1.4;
+      color: var(--white);
+      max-width: 820px;
+      margin: 0 auto 32px;
+      position: relative;
+    }
+    .philosophy-attr {
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── LIFESTYLE / PROPERTIES ── */
+    #lifestyle {
+      background: var(--black);
+    }
+    .lifestyle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .lifestyle-image img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      filter: brightness(0.8) saturate(0.85);
+    }
+    .lifestyle-image {
+      position: relative;
+    }
+    .lifestyle-image::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 60%, var(--black) 100%);
+    }
+    .lifestyle-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .lifestyle-points li {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .lp-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .lp-icon svg { width: 12px; height: 12px; fill: var(--gold); }
+    .lp-text strong {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .lp-text span {
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--gray);
+    }
+
+    /* ── GALLERY ── */
+    #gallery {
+      background: var(--dark);
+      padding: 120px 0;
+    }
+    .gallery-header {
+      padding: 0 60px;
+      margin-bottom: 60px;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 420px 280px;
+      gap: 3px;
+    }
+    .gallery-item {
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+    .gallery-item:first-child {
+      grid-row: 1 / 3;
+    }
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease, filter 0.4s ease;
+      filter: brightness(0.85) contrast(1.05) saturate(0.9);
+    }
+    .gallery-item:hover img {
+      transform: scale(1.06);
+      filter: brightness(0.95) contrast(1.05) saturate(1.0);
+    }
+    .gallery-item-caption {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 30px 24px 20px;
+      background: linear-gradient(to top, rgba(6,6,8,0.85), transparent);
+      transform: translateY(100%);
+      transition: transform 0.35s ease;
+    }
+    .gallery-item:hover .gallery-item-caption { transform: translateY(0); }
+    .gallery-item-caption span {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+    }
+
+    /* ── NET WORTH BANNER ── */
+    #networth {
+      background: var(--gold);
+      padding: 0;
+      overflow: hidden;
+    }
+    .ticker-wrap {
+      display: flex;
+      white-space: nowrap;
+      animation: ticker 30s linear infinite;
+      padding: 20px 0;
+    }
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 40px;
+      padding: 0 60px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--black);
+    }
+    .ticker-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--black);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ── QUOTES ── */
+    #quotes {
+      background: var(--dark-2);
+      padding: 120px 60px;
+    }
+    .quotes-header {
+      max-width: 500px;
+      margin-bottom: 72px;
+    }
+    .quotes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+    .quote-card {
+      background: var(--dark-3);
+      padding: 44px 36px 36px;
+      position: relative;
+      transition: background 0.3s;
+    }
+    .quote-card:hover { background: #1c1c23; }
+    .quote-mark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 4rem;
+      line-height: 0.6;
+      color: var(--gold);
+      opacity: 0.5;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .quote-body {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-style: italic;
+      font-weight: 300;
+      line-height: 1.7;
+      color: var(--gray-light);
+      margin-bottom: 28px;
+    }
+    .quote-footer {
+      border-top: 1px solid rgba(201,168,76,0.12);
+      padding-top: 20px;
+    }
+    .quote-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .quote-title {
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+    @media (max-width: 900px) {
+      .quotes-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── CONTACT ── */
+    #contact {
+      background: var(--black);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+    .contact-left p {
+      font-size: 0.85rem;
+      line-height: 2;
+      color: var(--gray);
+      margin-bottom: 40px;
+    }
+    .contact-categories {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .contact-cat {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border: 1px solid rgba(201,168,76,0.15);
+      transition: border-color 0.3s, background 0.3s;
+      cursor: pointer;
+    }
+    .contact-cat:hover {
+      border-color: var(--gold);
+      background: var(--gold-dim);
+    }
+    .contact-cat-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .contact-cat-icon svg { width: 16px; height: 16px; stroke: var(--gold); fill: none; stroke-width: 1.5; }
+    .contact-cat-text strong {
+      display: block;
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--white);
+    }
+    .contact-cat-text span {
+      font-size: 0.7rem;
+      color: var(--gray);
+    }
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .form-note {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group label {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gray);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: var(--dark-3);
+      border: 1px solid rgba(201,168,76,0.15);
+      color: var(--white);
+      padding: 14px 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      outline: none;
+      transition: border-color 0.3s;
+      resize: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--gold);
+    }
+    .form-group select option { background: var(--dark-3); }
+    .btn-submit {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      padding: 16px 40px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+      align-self: flex-start;
+    }
+    .btn-submit:hover { background: var(--gold); color: var(--black); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark);
+      padding: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(201,168,76,0.1);
+    }
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .footer-copy {
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      color: var(--gray);
+    }
+    .footer-links {
+      display: flex;
+      gap: 28px;
+    }
+    .footer-links a {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gray);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 18px 28px; }
+      .nav-links { display: none; }
+      section { padding: 80px 28px; }
+      #hero { align-items: flex-end; }
+      .hero-content { padding: 0 28px 60px; }
+      .hero-scroll { display: none; }
+      #about { grid-template-columns: 1fr; gap: 48px; }
+      .about-image-wrap { max-width: 400px; }
+      #contact { grid-template-columns: 1fr; gap: 56px; }
+      .form-row { grid-template-columns: 1fr; }
+      .lifestyle-grid { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+      .gallery-item:first-child { grid-row: auto; grid-column: 1 / 3; }
+      footer { flex-direction: column; gap: 24px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#hero">CBJ</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#highlights">Career</a></li>
+      <li><a href="#lifestyle">Lifestyle</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">San Diego &nbsp;·&nbsp; Class of 2026 &nbsp;·&nbsp; Official Site</p>
+      <h1 class="hero-title">Cassius<br /><span>Blaze Jr.</span></h1>
+      <p class="hero-sub">Commentator. Performer. Presence.</p>
+      <p class="hero-intro">Born and raised in San Diego, Cassius Blaze Jr. has become one of the most talked-about young voices in modern sports media, blending elite commentary instincts with an expanding on-screen career.</p>
+    </div>
+    <div class="hero-scroll">Scroll</div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="about-image-wrap">
+      <img src="PXL_20251230_005659282.jpg" alt="Cassius Blaze Jr. — Golden Hour" />
+    </div>
+    <div class="about-text">
+      <p class="section-label">The Story</p>
+      <h2 class="section-title">Beyond His Years</h2>
+      <div class="gold-rule"></div>
+      <p>Cassius Blaze Jr. is a San Diego-born commentator and performer known for his polished delivery, command of live moments, and unusual composure under pressure. He began calling local games as a child, and by his early teens had built a reputation for sharp analysis, dramatic pacing, and a voice well beyond his years.</p>
+      <p>He was privately coached under legendary NBA commentator Mike Breen, who helped shape his understanding of timing, tension, and storytelling. Known by insiders as "preternaturally calm," Cassius maintains a handwritten notebook of iconic calls, phrases, and crowd reactions — a habit that defines his obsessive craft.</p>
+      <p>He has consulted on sports-focused media productions, speaks at invite-only broadcasting summits, and founded the Blaze Foundation for Youth Storytelling to support the next generation of teen broadcasters and student journalists.</p>
+      <div class="about-stat-grid">
+        <div class="about-stat-item">
+          <div class="about-stat-num">$150M</div>
+          <div class="about-stat-label">Estimated Net Worth</div>
+        </div>
+        <div class="about-stat-item">
+          <div class="about-stat-num">17</div>
+          <div class="about-stat-label">Years Old</div>
+        </div>
+        <div class="about-stat-item">
+          <div class="about-stat-num">4</div>
+          <div class="about-stat-label">Properties Worldwide</div>
+        </div>
+        <div class="about-stat-item">
+          <div class="about-stat-num">2</div>
+          <div class="about-stat-label">Private Yachts</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HIGHLIGHTS -->
+  <section id="highlights">
+    <div class="highlights-header">
+      <p class="section-label">Career</p>
+      <h2 class="section-title">Select Credentials</h2>
+      <div class="gold-rule"></div>
+    </div>
+    <div class="highlights-grid">
+      <div class="highlight-card">
+        <div class="highlight-num">01</div>
+        <div class="highlight-title">Mentored by Mike Breen</div>
+        <div class="highlight-desc">Privately trained under the iconic NBA voice, absorbing decades of broadcasting craft — timing, tension, and the architecture of a great call.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">02</div>
+        <div class="highlight-title">Exclusive Broadcast Access</div>
+        <div class="highlight-desc">Invited to closed broadcast training sessions as a teenager, participating in elite media environments typically reserved for seasoned professionals.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">03</div>
+        <div class="highlight-title">Live Event Voice</div>
+        <div class="highlight-desc">Featured as the guest commentator for elite high school and invitational sporting events across Southern California, consistently praised for broadcast maturity.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">04</div>
+        <div class="highlight-title">Media Production Consultant</div>
+        <div class="highlight-desc">Consulted creative teams on sports-focused media productions, shaping voice, pacing, and story for broadcast content before his eighteenth birthday.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">05</div>
+        <div class="highlight-title">Acting — Sports Dramas</div>
+        <div class="highlight-desc">Transitioned into performance through youth sports dramas and Southern California stage projects, bringing the same command he carries behind a mic to in-front of a camera.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">06</div>
+        <div class="highlight-title">Blaze Foundation</div>
+        <div class="highlight-desc">Founder of the Blaze Foundation for Youth Storytelling, supporting teen broadcasters and student journalists across underserved communities in San Diego County.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">07</div>
+        <div class="highlight-title">Summit Speaker</div>
+        <div class="highlight-desc">A recurring featured voice at invite-only sports media summits on the future of live commentary and the next generation of broadcast talent.</div>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-num">08</div>
+        <div class="highlight-title">Creative Independence</div>
+        <div class="highlight-desc">Has reportedly declined several major network development offers, choosing to remain independent and selective about projects that meet his standard for authenticity and craft.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHILOSOPHY -->
+  <section id="philosophy">
+    <p class="section-label">On the Work</p>
+    <blockquote class="philosophy-quote">
+      "Commentary is not about filling silence. It is about deciding what deserves to be remembered."
+    </blockquote>
+    <p class="philosophy-attr">— Cassius Blaze Jr.</p>
+  </section>
+
+  <!-- NET WORTH TICKER -->
+  <div id="networth" aria-hidden="true">
+    <div class="ticker-wrap">
+      <div class="ticker-item">Estimated Net Worth $150 Million <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Marina del Rey &amp; Miami Yachts <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Malibu Residence <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Turks &amp; Caicos Family Estate <span class="ticker-dot"></span></div>
+      <div class="ticker-item">La Jolla Creative Retreat <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Brand Equity Holdings <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Media Licensing Portfolio <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Estimated Net Worth $150 Million <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Marina del Rey &amp; Miami Yachts <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Malibu Residence <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Turks &amp; Caicos Family Estate <span class="ticker-dot"></span></div>
+      <div class="ticker-item">La Jolla Creative Retreat <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Brand Equity Holdings <span class="ticker-dot"></span></div>
+      <div class="ticker-item">Media Licensing Portfolio <span class="ticker-dot"></span></div>
+    </div>
+  </div>
+
+  <!-- LIFESTYLE -->
+  <section id="lifestyle">
+    <div class="lifestyle-grid">
+      <div>
+        <p class="section-label">The Life</p>
+        <h2 class="section-title">Refined.<br />Deliberate.<br />Elevated.</h2>
+        <div class="gold-rule"></div>
+        <ul class="lifestyle-points">
+          <li>
+            <div class="lp-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>
+            </div>
+            <div class="lp-text">
+              <strong>Properties</strong>
+              <span>Malibu primary residence. Turks &amp; Caicos family estate. Private creative retreat in La Jolla.</span>
+            </div>
+          </li>
+          <li>
+            <div class="lp-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 16l4-8 4 8M12 16l4-8 4 8M6.5 13h7M14.5 13h3"/></svg>
+            </div>
+            <div class="lp-text">
+              <strong>On the Water</strong>
+              <span>Two private yachts — one docked seasonally in Marina del Rey, one used for private events off the coast of Miami.</span>
+            </div>
+          </li>
+          <li>
+            <div class="lp-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="lp-text">
+              <strong>On His Time</strong>
+              <span>Disciplined and selective. Every appearance, collaboration, and conversation is intentional.</span>
+            </div>
+          </li>
+          <li>
+            <div class="lp-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div class="lp-text">
+              <strong>The Notebook</strong>
+              <span>Keeps a handwritten archive of iconic calls, phrases, and crowd reactions — the private language of a craftsman.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="lifestyle-image">
+        <img src="IMG_20251225_232028.jpg" alt="Cassius Blaze Jr. — Immersive Art" />
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="contact-left">
+      <p class="section-label">Inquiries</p>
+      <h2 class="section-title">Select<br />Collaborations<br />Only</h2>
+      <div class="gold-rule"></div>
+      <p>Cassius is highly selective about the opportunities he chooses. All inquiries are reviewed personally. Response times reflect the volume of interest and the level of alignment with his current focus.</p>
+      <div class="contact-categories">
+        <div class="contact-cat">
+          <div class="contact-cat-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <div class="contact-cat-text">
+            <strong>Media &amp; Press</strong>
+            <span>Interviews, features, editorial</span>
+          </div>
+        </div>
+        <div class="contact-cat">
+          <div class="contact-cat-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div class="contact-cat-text">
+            <strong>Brand Partnerships</strong>
+            <span>Licensing, endorsements, equity deals</span>
+          </div>
+        </div>
+        <div class="contact-cat">
+          <div class="contact-cat-icon">
+            <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          </div>
+          <div class="contact-cat-text">
+            <strong>Speaking Engagements</strong>
+            <span>Summits, keynotes, panels</span>
+          </div>
+        </div>
+        <div class="contact-cat">
+          <div class="contact-cat-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="contact-cat-text">
+            <strong>Representation</strong>
+            <span>Talent agencies, management</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="contact-form">
+      <p class="form-note">Send an Inquiry</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" placeholder="First" />
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" placeholder="Last" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Organization</label>
+        <input type="text" placeholder="Company / Agency / Publication" />
+      </div>
+      <div class="form-group">
+        <label>Inquiry Type</label>
+        <select>
+          <option value="">Select Category</option>
+          <option>Media &amp; Press</option>
+          <option>Brand Partnership</option>
+          <option>Speaking Engagement</option>
+          <option>Representation</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Message</label>
+        <textarea rows="5" placeholder="Describe your inquiry briefly. Include relevant details such as timeline, scope, and intended platform."></textarea>
+      </div>
+      <button class="btn-submit" type="button">Submit Inquiry</button>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Cassius Blaze Jr.</div>
+    <p class="footer-copy">&copy; 2026 Cassius Blaze Jr. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#about">About</a>
+      <a href="#highlights">Career</a>
+      <a href="#gallery">Media</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </footer>
+
+</body>
+</html>
