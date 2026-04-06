@@ -124,10 +124,7 @@
     .hero-bg {
       position: absolute;
       inset: 0;
-      background-image: url('Snapchat-2069494671.jpg');
-      background-size: cover;
-      background-position: center top;
-      filter: brightness(0.35) contrast(1.1);
+      background: #000000;
       transform: scale(1.04);
       transition: transform 8s ease;
     }
@@ -240,13 +237,16 @@
     .about-image-wrap {
       position: relative;
     }
-    .about-image-wrap img {
+    .about-image-wrap img,
+    .about-image-wrap .img-placeholder {
       width: 100%;
       aspect-ratio: 3/4;
       object-fit: cover;
       object-position: center top;
       display: block;
-      filter: brightness(0.9) contrast(1.05);
+    }
+    .about-image-wrap .img-placeholder {
+      background: #000000;
     }
     .about-image-wrap::before {
       content: '';
@@ -396,11 +396,15 @@
       gap: 60px;
       align-items: center;
     }
-    .lifestyle-image img {
+    .lifestyle-image img,
+    .lifestyle-image .img-placeholder {
       width: 100%;
       aspect-ratio: 4/3;
       object-fit: cover;
-      filter: brightness(0.8) saturate(0.85);
+      display: block;
+    }
+    .lifestyle-image .img-placeholder {
+      background: #000000;
     }
     .lifestyle-image {
       position: relative;
@@ -794,7 +798,7 @@
   <!-- ABOUT -->
   <section id="about">
     <div class="about-image-wrap">
-      <img src="PXL_20251230_005659282.jpg" alt="Cassius Blaze Jr. — Golden Hour" />
+      <div class="img-placeholder"></div>
     </div>
     <div class="about-text">
       <p class="section-label">The Story</p>
@@ -951,7 +955,7 @@
         </ul>
       </div>
       <div class="lifestyle-image">
-        <img src="IMG_20251225_232028.jpg" alt="Cassius Blaze Jr. — Immersive Art" />
+        <div class="img-placeholder"></div>
       </div>
     </div>
   </section>
