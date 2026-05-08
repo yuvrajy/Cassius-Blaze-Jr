@@ -19,6 +19,13 @@ export const metadata: Metadata = {
 }
 
 export default function AboutPage() {
+  // The marketing/signup site lives on a configurable hostname; thenorm.info is
+  // locked. Fall back to the production value so the link still works in
+  // environments without env vars (e.g. someone running `pnpm build` cold).
+  const serviceDomain =
+    process.env.NEXT_PUBLIC_SERVICE_DOMAIN ?? 'getknown.com'
+  const pitchUrl = `https://${serviceDomain}/signup`
+
   return (
     <>
       <OrganizationJsonLd />
@@ -61,12 +68,12 @@ export default function AboutPage() {
           <p>
             We accept pitches. If you would like us to consider profiling
             someone &mdash; or you would like to be considered yourself
-            &mdash; the simplest route is through our partner program at{' '}
+            &mdash; the simplest route is{' '}
             <a
-              href="https://getknown.com"
+              href={pitchUrl}
               className="underline underline-offset-2 hover:text-[var(--norm-accent)]"
             >
-              getknown.com
+              our partner program at {serviceDomain}
             </a>
             , which handles introductions, fact-checking pre-work, and
             consent. Cold pitches are also welcome at{' '}

@@ -78,9 +78,12 @@ export interface BespokeDomainRequestedPayload {
   payment_id: string
 }
 
-// Discriminated union for handlers. Inngest's typed client uses an
-// `EventSchemas.fromRecord<>()` shape — sub-agent 6 should construct that
-// record from this map.
+// Map of event-name → payload shape, in the form Inngest's
+// `EventSchemas.fromRecord<>()` expects. Add new events here, keyed by a
+// member of `Events`.
+//
+// Sub-agent 6 passes this map to the Inngest client constructor:
+//   new Inngest({ schemas: new EventSchemas().fromRecord<AppEventMap>() })
 export interface AppEventMap {
   [Events.SIGNUP_PAID]: { data: SignupPaidPayload }
   [Events.PROFILE_UPDATED]: { data: ProfileUpdatedPayload }

@@ -1,21 +1,17 @@
-import { NextResponse } from 'next/server'
+import { serve } from 'inngest/next'
+import { inngest } from '@/lib/inngest/client'
+import {
+  signupPaid,
+  profileUpdated,
+  takedownRequested,
+} from '@/lib/inngest/functions'
 
-// Stub. Sub-agent 6 (workflows) will mount the Inngest serve handler here:
-//   import { serve } from 'inngest/next'
-//   import { inngest } from '@/lib/inngest/client'
-//   import * as fns from '@/lib/inngest/functions'
-//   export const { GET, POST, PUT } = serve({ client: inngest, functions: [...] })
-//
-// Event names live in `lib/contracts/events.ts` and must match exactly.
-export function GET() {
-  return NextResponse.json(
-    { stub: true, owner: 'agent 6' },
-    { status: 501 },
-  )
-}
-export function POST() {
-  return NextResponse.json(
-    { stub: true, owner: 'agent 6' },
-    { status: 501 },
-  )
-}
+// Inngest serve handler. Registers every function this agent owns. Agent 7
+// will own its own functions (cron, lifecycle) and serve them — possibly
+// mounted at this same route via a separate `serve()` import or merged here
+// once their lane is wired in. Until then, only the publishing functions
+// are registered.
+export const { GET, POST, PUT } = serve({
+  client: inngest,
+  functions: [signupPaid, profileUpdated, takedownRequested],
+})

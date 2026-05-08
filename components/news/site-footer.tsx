@@ -2,6 +2,9 @@ import Link from 'next/link'
 
 export function SiteFooter() {
   const year = new Date().getFullYear()
+  // The marketing site (where T&Cs live) is on an env-configurable hostname.
+  const serviceDomain =
+    process.env.NEXT_PUBLIC_SERVICE_DOMAIN ?? 'getknown.com'
   return (
     <footer className="mt-24 border-t border-[var(--norm-rule)] bg-[var(--norm-bg)]">
       <div className="mx-auto max-w-6xl px-6 py-10">
@@ -31,7 +34,7 @@ export function SiteFooter() {
               Sitemap
             </Link>
             <a
-              href="https://getknown.com/terms"
+              href={`https://${serviceDomain}/terms`}
               className="hover:text-[var(--norm-ink)]"
             >
               Terms

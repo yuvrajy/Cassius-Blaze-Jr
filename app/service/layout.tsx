@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: { default: 'getknown', template: '%s | getknown' },
@@ -8,5 +9,10 @@ export const metadata: Metadata = {
 export default function ServiceLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return <div className="min-h-screen">{children}</div>
+  return (
+    <div className="min-h-screen">
+      {children}
+      <Toaster position="top-right" />
+    </div>
+  )
 }
