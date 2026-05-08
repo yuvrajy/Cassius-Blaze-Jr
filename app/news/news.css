@@ -1,0 +1,91 @@
+/* Editorial palette + typography. Scoped under .norm-root so it never
+   leaks into the marketing or personal sites. */
+
+.norm-root {
+  --norm-bg: #f6f3ec;        /* warm off-white newsprint */
+  --norm-paper: #ffffff;     /* card/article surface */
+  --norm-ink: #161514;       /* deep ink */
+  --norm-muted: #6b6660;     /* secondary text / dateline */
+  --norm-rule: #d8d2c4;      /* hairline rules */
+  --norm-accent: #8a1c1c;    /* single editorial accent (deep crimson) */
+  --norm-accent-soft: #efe2dd;
+
+  font-family: var(--font-norm-serif), Georgia, 'Times New Roman', serif;
+}
+
+.norm-root .font-serif,
+.norm-root .norm-serif {
+  font-family: var(--font-norm-serif), Georgia, 'Times New Roman', serif;
+}
+
+.norm-root .font-sans,
+.norm-root .norm-sans {
+  font-family: var(--font-norm-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Article body: long-form reading. Generous leading, slightly larger
+   x-height, drop-cap optional. */
+.norm-prose p {
+  font-family: var(--font-norm-serif), Georgia, 'Times New Roman', serif;
+  font-size: 1.125rem;        /* ~18px */
+  line-height: 1.75;
+  color: var(--norm-ink);
+  margin-bottom: 1.4em;
+}
+
+.norm-prose p:first-of-type::first-letter {
+  font-weight: 900;
+  font-size: 3.25em;
+  line-height: 0.9;
+  float: left;
+  padding: 0.1em 0.12em 0 0;
+  color: var(--norm-ink);
+}
+
+/* Dateline / kicker style */
+.norm-kicker {
+  font-family: var(--font-norm-sans), system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--norm-muted);
+}
+
+/* Headline scale for cards in the grid */
+.norm-headline-xl {
+  font-family: var(--font-norm-serif), Georgia, serif;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+}
+
+.norm-rule {
+  border-color: var(--norm-rule);
+}
+
+/* "More about X" callout box inside the article body. */
+.norm-callout {
+  background: var(--norm-paper);
+  border-top: 3px solid var(--norm-ink);
+  border-bottom: 1px solid var(--norm-rule);
+  padding: 1.5rem 1.5rem 1.75rem;
+  margin: 2.5rem 0;
+}
+
+.norm-callout-label {
+  font-family: var(--font-norm-sans), system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--norm-accent);
+  font-weight: 600;
+}
+
+/* Block-image placeholder when a photo is missing. We use the existing
+   convention of black placeholder divs from the deprecated marketing site. */
+.norm-photo-placeholder {
+  background: #1a1816;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
