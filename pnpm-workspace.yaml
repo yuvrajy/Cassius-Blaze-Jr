@@ -1,3 +1,19 @@
+# pnpm settings for this single-package repo. Not actually a workspace —
+# pnpm just reads its config from this file in pnpm@11+.
+#
+# `allowBuilds` is the pnpm@11 setting that decides which packages may run
+# install scripts. Without an explicit boolean per package, pnpm exits with
+# ERR_PNPM_IGNORED_BUILDS.
+#
+#   sharp           — image processing for the photo pipeline (agent 6).
+#                     Build downloads platform-specific native binaries.
+#   protobufjs      — pulled in transitively. Generates protobuf stubs.
+#   unrs-resolver   — eslint-config-next's resolver; native bindings.
+#   msw             — service-worker mock library, only used in tests.
+#                     Skip its post-install (no `msw init` here).
+
 allowBuilds:
-  protobufjs: set this to true or false
-  sharp: set this to true or false
+  sharp: true
+  protobufjs: true
+  unrs-resolver: true
+  msw: false
