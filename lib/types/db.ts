@@ -69,11 +69,32 @@ export type ArticleRow = {
   updated_at: string
 }
 
+// Variant URLs written by sub-agent 6's photo pipeline. Each value is a
+// fully-qualified absolute URL to a Supabase Storage object (or its
+// signed equivalent), not a relative path. All keys are optional —
+// pipelines that haven't run yet, or that opted out of a particular
+// rendition, leave the slot off.
+//
+// Sizes / formats:
+//   hero          1200×800   webp   article + dashboard hero
+//   gallery        800×800   webp   square gallery tile
+//   og            1200×630   webp   Open Graph card on article + personal
+//   thumb          400×400   webp   inline avatar / dashboard thumb
+//   original       (full)    jpeg   uploaded original, EXIF-stripped
+//   large          alias of hero    (kept for back-compat with renderers)
+//   medium         alias of gallery (kept for back-compat with renderers)
+//   favicon32       32×32    png    primary photo only (personal site favicon)
+//   apple_touch    180×180   png    primary photo only (apple-touch-icon)
 export type PhotoVariants = {
+  hero?: string
+  gallery?: string
+  og?: string
   thumb?: string
-  medium?: string
-  large?: string
   original?: string
+  large?: string
+  medium?: string
+  favicon32?: string
+  apple_touch?: string
 }
 
 export type PhotoRow = {
