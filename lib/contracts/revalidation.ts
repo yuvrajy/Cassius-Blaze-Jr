@@ -47,9 +47,16 @@ export function newsRevalidationPaths(article: ArticleLike): string[] {
   ]
 }
 
-// Personal-site paths to invalidate on profile change.
+// Personal-site paths to invalidate on profile change. The subdomain's
+// own page, its sitemap (per-tenant), and the dynamically-generated OG
+// card all need to refresh together — otherwise a profile-photo edit
+// can leave the OG card showing the prior hero image.
 export function personalRevalidationPaths(profile: ProfileLike): string[] {
-  return [`/personal/${profile.subdomain}`]
+  return [
+    `/personal/${profile.subdomain}`,
+    `/personal/${profile.subdomain}/sitemap.xml`,
+    `/personal/${profile.subdomain}/opengraph-image`,
+  ]
 }
 
 // One-call helper that invalidates BOTH the personal site and its linked
