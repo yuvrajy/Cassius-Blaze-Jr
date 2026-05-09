@@ -35,12 +35,23 @@ import { StepReview } from './step-review'
 import { validateSocialLink } from './social-link-row'
 import { type UniquenessState } from './uniqueness-indicator'
 
-type Defaults = Omit<SignupInputType, 'tc_accepted' | 'age_confirmed'> & {
+type Defaults = Omit<
+  SignupInputType,
+  'tc_accepted' | 'age_confirmed' | 'self_or_permission_attested'
+> & {
   tc_accepted: boolean
   age_confirmed: boolean
+  self_or_permission_attested: boolean
 }
 
+// TODO(agent 2 re-prompt): wire `user_id` from supabase.auth.signInAnonymously()
+// at form mount and `email` / `tier` from the appropriate steps. The empty
+// strings / 'base' default below are placeholders so the contract type checks;
+// the contract Zod will reject them on submit.
 const DEFAULTS: Defaults = {
+  user_id: '',
+  email: '',
+  tier: 'base',
   display_name: '',
   subdomain: '',
   tagline: '',
@@ -51,6 +62,7 @@ const DEFAULTS: Defaults = {
   tc_version: TC_VERSION,
   tc_accepted: false,
   age_confirmed: false,
+  self_or_permission_attested: false,
 }
 
 type DraftBlob = {
@@ -237,7 +249,14 @@ export function SignupWizard() {
     setSubmitting(true)
     setSubmitNote(null)
     try {
+      // TODO(agent 2 re-prompt): set user_id/email/tier from real sources
+      // (anonymous-auth user_id, email step, tier from URL query). Until
+      // then we copy whatever is in `values`; the contract Zod below will
+      // reject empty strings, so the submit fails closed.
       const payload: SignupInputType = {
+        user_id: values.user_id,
+        email: values.email,
+        tier: values.tier,
         display_name: values.display_name.trim(),
         subdomain: values.subdomain,
         tagline: values.tagline?.trim() ? values.tagline.trim() : undefined,
@@ -255,6 +274,7 @@ export function SignupWizard() {
         tc_version: TC_VERSION,
         tc_accepted: true,
         age_confirmed: true,
+        self_or_permission_attested: selfOrPermission as true,
       }
 
       // Final guard: run the contract Zod against the assembled payload.
