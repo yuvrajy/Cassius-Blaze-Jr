@@ -21,6 +21,15 @@ export interface ArticleWithProfile extends ArticleRow {
   profile: ProfileWithAssets
 }
 
+// What sub-agent 5's owner dashboard reads. Today identical to
+// ProfileWithAssets — the underlying ProfileRow already carries every
+// owner-only field (status, moderation_notes, expires_at,
+// expiry_warning_sent_at, takedown_finalized_at, bespoke_domain*). The
+// alias exists so dashboard code names the intent ("this is the owner's
+// view of their own profile") and so we have a place to narrow the public
+// shape later without renaming consumers.
+export type OwnerProfileView = ProfileWithAssets
+
 // Convert a (platform, value) pair into the canonical public URL for that
 // person on that platform. Used for sameAs / Knowledge Graph linking and
 // for the "find me elsewhere" footer on both the news article and the
