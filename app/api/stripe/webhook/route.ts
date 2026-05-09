@@ -88,6 +88,7 @@ export async function POST(req: Request) {
           profile_id: profileId,
           user_id: userId,
           payment_id: paymentRow?.id ?? '',
+          pending_signup_id: meta.pending_signup_id ?? '',
           stripe_session_id: session.id,
         })
       } else {

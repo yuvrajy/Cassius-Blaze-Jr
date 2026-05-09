@@ -47,6 +47,11 @@ export interface SignupPaidPayload {
   profile_id: string
   user_id: string
   payment_id: string
+  /** id of the row in `pending_signups` holding the validated SignupInput
+   *  payload. The handler loads it, runs the publish pipeline, then
+   *  deletes the row. Direct pointer — replaces the stringified-JSON
+   *  pointer agent 6 was previously stashing in profiles.moderation_notes. */
+  pending_signup_id: string
   /** Stripe checkout session id, kept on the event for idempotency. */
   stripe_session_id: string
 }
