@@ -111,6 +111,24 @@ Sub-agent 1 prepopulated the news layout (`app/news/layout.tsx`) and the
 news components in `components/news/` to give sub-agent 3 a working
 starting point. Sub-agent 3 owns those files and is free to replace them.
 
+### Shared lane: `lib/inngest/functions/**`
+
+This single directory holds Inngest functions written by both sub-agent 6
+and sub-agent 7. Split by handler:
+
+- **Sub-agent 6 owns** the publish-pipeline handlers — `signup-paid.ts`,
+  `profile-updated.ts`, `takedown-requested.ts` (the core handler that
+  flips DB state and sends the customer email).
+- **Sub-agent 7 owns** the lifecycle handlers — `bespoke-domain.ts`,
+  `expiry-due.ts`, `takedown-finalize.ts` (the cooled-off hard-delete
+  step).
+
+Both sets are registered in `app/api/inngest/route.ts`, which is sub-agent 6's
+file but is the canonical mount point for every Inngest function.
+
+When adding a new handler, place it in this directory regardless of agent
+and update the registration in `app/api/inngest/route.ts`.
+
 ## Folder layout
 
 ```
