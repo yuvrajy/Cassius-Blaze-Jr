@@ -50,6 +50,7 @@ export type ProfileRow = {
   expires_at: string | null
   expiry_warning_sent_at: string | null
   takedown_finalized_at: string | null
+  bespoke_domain_email_sent_at: string | null
   created_at: string
   updated_at: string
 }
@@ -140,6 +141,13 @@ export type NameCollisionCheckRow = {
   checked_at: string
 }
 
+export type PendingSignupRow = {
+  id: string
+  payload: Json
+  created_at: string
+  expires_at: string
+}
+
 // Database type — the shape supabase-js expects via its generic.
 export type Database = {
   public: {
@@ -159,6 +167,7 @@ export type Database = {
           expires_at?: string | null
           expiry_warning_sent_at?: string | null
           takedown_finalized_at?: string | null
+          bespoke_domain_email_sent_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -175,6 +184,7 @@ export type Database = {
           expires_at?: string | null
           expiry_warning_sent_at?: string | null
           takedown_finalized_at?: string | null
+          bespoke_domain_email_sent_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -397,6 +407,22 @@ export type Database = {
           severity?: number
           evidence?: Json
           checked_at?: string
+        }
+        Relationships: []
+      }
+      pending_signups: {
+        Row: PendingSignupRow
+        Insert: {
+          id?: string
+          payload: Json
+          created_at?: string
+          expires_at?: string
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          created_at?: string
+          expires_at?: string
         }
         Relationships: []
       }
