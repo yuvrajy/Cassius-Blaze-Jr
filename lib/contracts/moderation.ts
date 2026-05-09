@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 // Contract: moderation result shapes.
 //
 // Producer:  sub-agent 6 (workflows) — runs Claude bio review, Sightengine
@@ -82,7 +84,47 @@ export interface NameCollisionVerdict {
   evidence: NameCollisionEvidence
   // The moderator-facing one-liner that explains the severity.
   summary: string
+  // Alternate spellings / disambiguators Claude proposes when severity ≥ 3.
+  // Shown to the customer as suggested fixes during signup; surfaced to
+  // moderators in the admin queue. Empty / absent means none proposed.
+  suggested_variations?: string[]
 }
+
+// Zod mirror of NameCollisionVerdict. Use in code paths that receive a
+// verdict from the wire (e.g. cached row in name_collision_checks
+// re-hydrated as Json) and want to fail-closed on shape drift.
+export const NameCollisionVerdictSchema = z.object({
+  name_normalized: z.string(),
+  severity: z.union([
+    z.literal(0),
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+  ]),
+  evidence: z.object({
+    results: z.array(
+      z.object({
+        title: z.string(),
+        url: z.string(),
+        snippet: z.string(),
+        domain: z.string(),
+      }),
+    ),
+    wikidata: z
+      .array(
+        z.object({
+          qid: z.string(),
+          label: z.string(),
+          description: z.string(),
+        }),
+      )
+      .optional(),
+  }),
+  summary: z.string(),
+  suggested_variations: z.array(z.string()).optional(),
+})
 
 // ---------------------------------------------------------------------
 // Aggregated moderation result for a profile (what the admin queue shows)
