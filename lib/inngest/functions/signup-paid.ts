@@ -12,8 +12,8 @@ import { moderateBio } from '@/lib/moderation/bio'
 import { generateArticle } from '@/lib/moderation/article'
 import { sendEmail } from '@/lib/email/client'
 import { welcomeEmail } from '@/lib/email/templates/welcome'
-import { devLog, devLogOnly } from '@/lib/inngest/dev'
-import { profileUrls, revalidateProfile } from '@/lib/contracts/revalidation'
+import { devLog } from '@/lib/inngest/dev'
+import { revalidateProfile } from '@/lib/contracts/revalidation'
 import type {
   BioVerdict,
   PhotoVerdict,
@@ -21,12 +21,12 @@ import type {
 
 // signup.paid → publish pipeline.
 //
-// Pre-conditions (set by /api/stripe/webhook before firing this event):
+// Pre-conditions (set by /api/signup + /api/stripe/webhook):
 //   - profiles row exists with status='pending_moderation' and a bound user_id
-//   - payments row exists with stripe_session_id matching the event
-//   - pending_signups row exists, keyed by profile.user_id (the webhook
-//     reads pending_signup_id from Stripe metadata and stashes it on the
-//     profiles row's `moderation_notes` field — see /api/signup for why)
+//     (the same anonymous user_id created at form mount).
+//   - payments row exists with stripe_session_id matching the event.
+//   - pending_signups row exists; its id rides on the SIGNUP_PAID event
+//     payload directly (no JSON-pointer hack).
 //
 // Each step.run is independently retried on failure. We make every step
 // idempotent so re-runs don't duplicate work.
@@ -39,11 +39,11 @@ export const signupPaid = inngest.createFunction(
   },
   { event: Events.SIGNUP_PAID },
   async ({ event, step }) => {
-    const { profile_id, user_id, stripe_session_id } =
+    const { profile_id, user_id, stripe_session_id, pending_signup_id } =
       event.data as SignupPaidPayload
 
     // ---- Load --------------------------------------------------------
-    const { profile, pendingId } = await step.run('load-profile', async () => {
+    const profile = await step.run('load-profile', async () => {
       const admin = createAdminClient()
       const { data, error } = await admin
         .from('profiles')
@@ -51,21 +51,37 @@ export const signupPaid = inngest.createFunction(
         .eq('id', profile_id)
         .single()
       if (error || !data) throw new Error(`profile ${profile_id}: ${error?.message ?? 'missing'}`)
-      // We stashed the pending_signup_id in moderation_notes during
-      // /api/signup. Read it out now.
-      const pendingId = parsePendingId(data.moderation_notes)
-      if (!pendingId) throw new Error(`profile ${profile_id}: missing pending_signup_id`)
-      return { profile: data, pendingId }
+      return data
     })
 
-    const pending = await step.run('load-pending', () => getPendingSignup(pendingId))
+    const pending = await step.run('load-pending', () => getPendingSignup(pending_signup_id))
     const payload = pending.payload
+
+    // ---- Upgrade anon user to email-auth ----------------------------
+    // The user_id was created at form mount via signInAnonymously().
+    // updateUserById attaches an email + confirms it on the same row, so
+    // every storage object under {user_id}/... keeps working without
+    // migration. Idempotent on re-run: if the email is already attached,
+    // Supabase returns the same user; if it now collides with a different
+    // existing user, swallow the "already exists" error so retries don't
+    // fail forever.
+    await step.run('upgrade-anon-to-email', async () => {
+      const admin = createAdminClient()
+      const { error } = await admin.auth.admin.updateUserById(user_id, {
+        email: payload.email,
+        email_confirm: true,
+      })
+      if (!error) return
+      const msg = error.message.toLowerCase()
+      if (msg.includes('already') || msg.includes('exists') || msg.includes('duplicate')) {
+        devLog('supabase', 'updateUserById no-op (email already set)', { user_id })
+        return
+      }
+      throw error
+    })
 
     // ---- Process & moderate photos ----------------------------------
     const processedPhotos = await step.run('process-photos', async () => {
-      const admin = createAdminClient()
-      // Reserve photo ids by inserting placeholder rows we'll update with
-      // variants after sharp runs. Idempotent on (profile_id, sort_order).
       const out: Array<{
         photo_id: string
         storage_path: string
@@ -93,7 +109,6 @@ export const signupPaid = inngest.createFunction(
           consent_at: new Date().toISOString(),
         })
       }
-      void admin // intentionally unused — the work is in processPhoto
       return out
     })
 
@@ -140,8 +155,6 @@ export const signupPaid = inngest.createFunction(
 
     const articleSlug = await step.run('insert-article', async () => {
       const admin = createAdminClient()
-      // Use a collision-resistant slug; if a race somehow lands a duplicate,
-      // append another suffix and retry once.
       let slug = article.slug
       for (let attempt = 0; attempt < 3; attempt++) {
         const { error } = await admin.from('articles').insert({
@@ -225,6 +238,9 @@ export const signupPaid = inngest.createFunction(
         .eq('profile_id', profile_id)
         .maybeSingle()
       if (existing) return
+      // CONTRACT GAP: tc_acceptances has no column for
+      // self_or_permission_attested. Until agent 1 adds one, the boolean
+      // is dropped here — see the handoff summary.
       const { error } = await admin.from('tc_acceptances').insert({
         profile_id,
         user_id,
@@ -239,15 +255,8 @@ export const signupPaid = inngest.createFunction(
     // ---- Email + revalidate -----------------------------------------
     await step.run('send-welcome-email', async () => {
       const admin = createAdminClient()
-      // Look up the user's email — we don't have it on the event.
-      const { data: u } = await admin.auth.admin.getUserById(user_id)
-      const email = u?.user?.email
-      if (!email) throw new Error(`auth user ${user_id}: missing email`)
-
+      const email = payload.email
       let magicLink = `${siteUrl()}/service/dashboard`
-      if (devLogOnly('anthropic') /* re-use for full offline */) {
-        // No-op — we already use the dashboard URL.
-      }
       const { data: link, error } = await admin.auth.admin.generateLink({
         type: 'magiclink',
         email,
@@ -269,7 +278,7 @@ export const signupPaid = inngest.createFunction(
       })
     })
 
-    await step.run('delete-pending', () => deletePendingSignup(pendingId))
+    await step.run('delete-pending', () => deletePendingSignup(pending_signup_id))
 
     await step.run('revalidate', async () => {
       await revalidateProfile(
@@ -278,8 +287,6 @@ export const signupPaid = inngest.createFunction(
       )
     })
 
-    void profileUrls // keep import; profileUrls used elsewhere
-
     return { profile_id, slug: articleSlug }
   },
 )
@@ -287,19 +294,6 @@ export const signupPaid = inngest.createFunction(
 function siteUrl() {
   const host = process.env.NEXT_PUBLIC_SERVICE_DOMAIN ?? 'getknown.com'
   return `https://${host}`
-}
-
-// We stash `pending_signup_id` in moderation_notes between /api/signup and
-// the workflow. Format: a JSON blob `{ "pending_signup_id": "<uuid>" }`.
-// Workflow rewrites moderation_notes after running with the verdict summary.
-function parsePendingId(notes: string | null): string | null {
-  if (!notes) return null
-  try {
-    const j = JSON.parse(notes) as { pending_signup_id?: string }
-    return j.pending_signup_id ?? null
-  } catch {
-    return null
-  }
 }
 
 function serializeModerationNotes(args: {

@@ -25,7 +25,7 @@ import { PhotoCard } from './photo-card'
 import type { PhotoUploadInput } from '@/lib/contracts/signup'
 
 // Extract the photo_uuid from a draft storage path:
-//   draft/{session_id}/{photo_uuid}.jpg → photo_uuid
+//   {user_id}/draft/{photo_uuid}.jpg → photo_uuid
 function uuidFromPath(p: string): string {
   const file = p.split('/').pop() ?? p
   return file.replace(/\.[^.]+$/, '')
@@ -37,11 +37,11 @@ function publicUrlFor(path: string): string {
 }
 
 export function StepPhotos({
-  sessionId,
+  userId,
   photos,
   setPhotos,
 }: {
-  sessionId: string
+  userId: string
   photos: PhotoUploadInput[]
   setPhotos: (next: PhotoUploadInput[]) => void
 }) {
@@ -164,7 +164,7 @@ export function StepPhotos({
       )}
 
       <PhotoDropzone
-        sessionId={sessionId}
+        userId={userId}
         remainingSlots={remaining}
         onUploaded={handleUploaded}
         onError={handleError}

@@ -59,12 +59,12 @@ async function stripExifViaCanvas(file: File): Promise<{
 }
 
 export function PhotoDropzone({
-  sessionId,
+  userId,
   remainingSlots,
   onUploaded,
   onError,
 }: {
-  sessionId: string
+  userId: string
   remainingSlots: number
   onUploaded: (p: UploadedPhoto) => void
   onError: (e: UploadError) => void
@@ -101,7 +101,11 @@ export function PhotoDropzone({
             }
             const { blob, width, height } = await stripExifViaCanvas(file)
             const photo_uuid = crypto.randomUUID()
-            const storage_path = `draft/${sessionId}/${photo_uuid}.jpg`
+            // Path scheme: {user_id}/draft/{photo_uuid}.jpg.
+            // The leading {user_id} segment satisfies the storage RLS policy
+            // (auth.uid() = first folder). Agent 6 moves objects out of the
+            // /draft/ prefix once the profile is paid + finalized.
+            const storage_path = `${userId}/draft/${photo_uuid}.jpg`
             const { error } = await supabase.storage
               .from('photos')
               .upload(storage_path, blob, {
@@ -130,7 +134,7 @@ export function PhotoDropzone({
         // setBusy already managed per-file
       }
     },
-    [remainingSlots, sessionId, onUploaded, onError],
+    [remainingSlots, userId, onUploaded, onError],
   )
 
   if (remainingSlots <= 0) return null

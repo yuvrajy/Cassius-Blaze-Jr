@@ -8,28 +8,24 @@ import { devLog, devLogOnly } from '@/lib/inngest/dev'
 
 // POST /api/signup
 //
-// Server-side flow (mirrors the brief):
-//   1. Re-validate the SignupInput body against the Zod schema. Reject
-//      unknown shapes and any unchecked T&C / age boxes.
-//   2. Check the subdomain is still available (race-safe: rely on the
-//      profiles.subdomain unique index — catch the conflict).
-//   3. Provision the Supabase auth user for the customer's email if one
-//      doesn't already exist; capture user_id.
-//   4. Stash the full validated payload in `pending_signups`.
-//   5. Insert a profile shell row (status='pending_moderation' — RLS
-//      already hides non-live profiles from the public, so the shell is
-//      invisible until the workflow approves it). We carry the
-//      pending_signup_id in `moderation_notes` as a tiny JSON pointer so
-//      the Inngest handler can find it after the webhook fires.
-//   6. Insert a payments row in `pending` status, keyed on the Stripe
-//      session id. The webhook flips it to `paid`.
-//   7. Create a Stripe Checkout session with metadata
+// Server-side flow (mirrors lib/contracts/README.md "Auth lifecycle for signup"):
+//   1. Re-validate the SignupInput body. user_id, email, tier, and
+//      self_or_permission_attested are now first-class required fields.
+//      The user_id was created at form mount via signInAnonymously() and
+//      stays stable through to publish.
+//   2. Check the subdomain is still available (race-safe via the unique
+//      index — catch the conflict).
+//   3. Stash the validated payload in `pending_signups`.
+//   4. Insert a profile shell row bound to the anonymous user_id.
+//   5. Pre-create a payments row in `pending` status (idempotent on
+//      stripe_session_id once we have it).
+//   6. Create a Stripe Checkout session with metadata
 //      { profile_id, user_id, pending_signup_id, tier } so the webhook
-//      has everything it needs without a DB lookup.
-//   8. Return { checkoutUrl }.
+//      passes pending_signup_id straight through onto the SIGNUP_PAID
+//      event payload.
+//   7. Return { checkoutUrl }.
 
 export async function POST(req: Request) {
-  // -- 1. Parse + validate --------------------------------------------
   let json: unknown
   try {
     json = await req.json()
@@ -46,20 +42,9 @@ export async function POST(req: Request) {
   }
   const data = parse.data
 
-  // 18+ check from DOB.
   if (!isEighteenPlus(data.dob)) {
     return NextResponse.json({ error: 'must be 18+' }, { status: 400 })
   }
-
-  // Customer email + tier come in a sibling object. The signup contract
-  // doesn't specify them today, so accept them off the JSON envelope.
-  const env = (json as { email?: string; tier?: string } | null) ?? {}
-  const customerEmail = typeof env.email === 'string' ? env.email.trim() : ''
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-    return NextResponse.json({ error: 'valid email required' }, { status: 400 })
-  }
-  const tier: 'base' | 'bespoke_domain' =
-    env.tier === 'bespoke_domain' ? 'bespoke_domain' : 'base'
 
   const admin = createAdminClient()
 
@@ -73,23 +58,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'subdomain taken' }, { status: 409 })
   }
 
-  // -- 3. Provision auth user -----------------------------------------
-  const userId = await ensureAuthUser(admin, customerEmail)
-
-  // -- 4. Stash the payload -------------------------------------------
+  // -- 3. Stash the payload -------------------------------------------
   const pendingSignupId = await insertPendingSignup(data)
 
-  // -- 5. Profile shell -----------------------------------------------
+  // -- 4. Profile shell -----------------------------------------------
   const { data: created, error: profileErr } = await admin
     .from('profiles')
     .insert({
-      user_id: userId,
+      user_id: data.user_id,
       subdomain: data.subdomain,
       display_name: data.display_name,
       tagline: data.tagline ?? null,
       bio: data.bio,
       status: 'pending_moderation',
-      moderation_notes: JSON.stringify({ pending_signup_id: pendingSignupId }),
     })
     .select('id')
     .single()
@@ -104,12 +85,14 @@ export async function POST(req: Request) {
   }
   const profileId = created.id
 
-  // -- 6 + 7. Create Stripe Checkout ----------------------------------
+  // -- 5 + 6. Create Stripe Checkout ----------------------------------
   if (devLogOnly('stripe')) {
     devLog('stripe', 'createCheckoutSession (dev-mode)', {
-      tier,
-      customerEmail,
+      tier: data.tier,
+      email: data.email,
       profileId,
+      userId: data.user_id,
+      pendingSignupId,
     })
     return NextResponse.json({
       checkoutUrl: `https://stripe.local/devmode/${profileId}`,
@@ -120,27 +103,25 @@ export async function POST(req: Request) {
   const stripe = getStripe()
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    customer_email: customerEmail,
-    line_items: [{ price: priceIdForTier(tier), quantity: 1 }],
+    customer_email: data.email,
+    line_items: [{ price: priceIdForTier(data.tier), quantity: 1 }],
     success_url: `${siteUrl()}/service/dashboard?paid=1`,
     cancel_url: `${siteUrl()}/service/signup?cancelled=1`,
     metadata: {
       profile_id: profileId,
-      user_id: userId,
+      user_id: data.user_id,
       pending_signup_id: pendingSignupId,
-      tier,
+      tier: data.tier,
     },
   })
 
-  // Pre-create the payments row in `pending` so the webhook update is a
-  // pure flip rather than an insert race.
   await admin.from('payments').insert({
     profile_id: profileId,
-    user_id: userId,
+    user_id: data.user_id,
     stripe_session_id: session.id,
     amount_cents: 0,
     currency: 'usd',
-    tier,
+    tier: data.tier,
     status: 'pending',
   })
 
@@ -157,25 +138,4 @@ function isEighteenPlus(isoDate: string): boolean {
   if (Number.isNaN(dob)) return false
   const yrs = (Date.now() - dob) / (365.25 * 24 * 60 * 60 * 1000)
   return yrs >= 18
-}
-
-async function ensureAuthUser(
-  admin: ReturnType<typeof createAdminClient>,
-  email: string,
-): Promise<string> {
-  // Look for an existing user with this email. The admin API doesn't expose
-  // a direct findByEmail, so we list a small page filtered by email — it's
-  // fine for a single signup request.
-  const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
-  const found = list?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase())
-  if (found) return found.id
-
-  const { data: created, error } = await admin.auth.admin.createUser({
-    email,
-    email_confirm: false,
-  })
-  if (error || !created.user) {
-    throw new Error(`createUser failed: ${error?.message ?? 'unknown'}`)
-  }
-  return created.user.id
 }

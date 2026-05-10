@@ -29,9 +29,13 @@ export function StepReview({
         subtitle="Last look. Edit anything you’d like to change, then continue to checkout."
       />
 
+      <ReviewCard label="Account" onEdit={() => goTo(0)}>
+        <p className="text-sm">{values.email}</p>
+        <p className="text-xs text-muted-foreground">DOB: {values.dob}</p>
+      </ReviewCard>
+
       <ReviewCard label="Name" onEdit={() => goTo(1)}>
         <p className="font-medium">{values.display_name}</p>
-        <p className="text-xs text-muted-foreground">DOB: {values.dob}</p>
       </ReviewCard>
 
       <ReviewCard label="Address" onEdit={() => goTo(2)}>

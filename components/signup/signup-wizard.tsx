@@ -2,17 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Toaster, toast } from 'sonner'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowLeftIcon, ArrowRightIcon, Loader2Icon } from 'lucide-react'
+import { ArrowLeftIcon, ArrowRightIcon, Loader2Icon, OctagonAlertIcon } from 'lucide-react'
 import {
   SignupInput,
   type SignupInput as SignupInputType,
   type SocialLinkInput,
   type PhotoUploadInput,
 } from '@/lib/contracts/signup'
+import { createClient } from '@/lib/supabase/client'
 import {
   TC_VERSION,
   TOTAL_STEPS,
@@ -35,6 +35,11 @@ import { StepReview } from './step-review'
 import { validateSocialLink } from './social-link-row'
 import { type UniquenessState } from './uniqueness-indicator'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// In-flight wizard state. Differs from SignupInput in that the literal-true
+// checkboxes are mutable booleans during the form, and user_id may briefly be
+// empty before signInAnonymously() resolves on mount.
 type Defaults = Omit<
   SignupInputType,
   'tc_accepted' | 'age_confirmed' | 'self_or_permission_attested'
@@ -44,13 +49,11 @@ type Defaults = Omit<
   self_or_permission_attested: boolean
 }
 
-// TODO(agent 2 re-prompt): wire `user_id` from supabase.auth.signInAnonymously()
-// at form mount and `email` / `tier` from the appropriate steps. The empty
-// strings / 'base' default below are placeholders so the contract type checks;
-// the contract Zod will reject them on submit.
 const DEFAULTS: Defaults = {
   user_id: '',
   email: '',
+  // Always 'base' here — bespoke domain is a dashboard upsell after the
+  // customer has a profile, not a wizard branch.
   tier: 'base',
   display_name: '',
   subdomain: '',
@@ -69,10 +72,16 @@ type DraftBlob = {
   session_id: string
   values: Defaults
   step: number
-  selfOrPermission: boolean
   override: boolean
   scrolledToBottom: boolean
 }
+
+// What goes wrong with auth on mount. We block the form rather than letting
+// the user fill it out only to fail at upload/submit.
+type AuthState =
+  | { kind: 'pending' }
+  | { kind: 'ready'; userId: string }
+  | { kind: 'error'; message: string }
 
 function newSessionId() {
   return crypto.randomUUID()
@@ -82,7 +91,6 @@ export function SignupWizard() {
   // Non-payload state ---------------------------------------------------
   const [step, setStep] = useState(0)
   const [sessionId, setSessionId] = useState<string>('')
-  const [selfOrPermission, setSelfOrPermission] = useState(false)
   const [override, setOverride] = useState(false)
   const [scrolledToBottom, setScrolledToBottom] = useState(false)
   const [uniqueness, setUniqueness] = useState<UniquenessState>({ kind: 'idle' })
@@ -92,14 +100,14 @@ export function SignupWizard() {
   const [submitting, setSubmitting] = useState(false)
   const [submitNote, setSubmitNote] = useState<string | null>(null)
   const [hydrated, setHydrated] = useState(false)
+  const [auth, setAuth] = useState<AuthState>({ kind: 'pending' })
   const subdomainTouched = useRef(false)
 
+  // No zodResolver: per-step gating is manual (see canContinue), and the
+  // contract Zod runs once on the assembled payload inside submit(). Wiring
+  // a resolver here just for that single safeParse would require a cast
+  // because the Defaults type loosens literal-true checkboxes to bools.
   const form = useForm<Defaults>({
-    // Cast: the resolver is typed for SignupInput (with literal-true checkboxes),
-    // but defaults seed unchecked. The resolver only fires at submit and is
-    // gated by per-step canContinue logic, so loose checkbox types are fine here.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(SignupInput) as any,
     defaultValues: DEFAULTS,
     mode: 'onChange',
   })
@@ -121,7 +129,6 @@ export function SignupWizard() {
           setSessionId(blob.session_id)
           form.reset(blob.values)
           setStep(blob.step ?? 0)
-          setSelfOrPermission(blob.selfOrPermission ?? false)
           setOverride(blob.override ?? false)
           setScrolledToBottom(blob.scrolledToBottom ?? false)
           setHydrated(true)
@@ -143,6 +150,51 @@ export function SignupWizard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Establish (or recover) an anonymous Supabase session on mount. Storage
+  // RLS gates uploads on auth.uid() = first folder segment, so we need a
+  // user_id before the photos step. Reuse an existing session when present
+  // (refresh-resilient) and only call signInAnonymously() on a cold mount.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (cancelled) return
+        if (session?.user) {
+          setAuth({ kind: 'ready', userId: session.user.id })
+          form.setValue('user_id', session.user.id)
+          return
+        }
+        const { data, error } = await supabase.auth.signInAnonymously()
+        if (cancelled) return
+        if (error || !data.user) {
+          setAuth({
+            kind: 'error',
+            message:
+              error?.message ??
+              'Anonymous sign-in failed. Refresh the page to retry.',
+          })
+          return
+        }
+        setAuth({ kind: 'ready', userId: data.user.id })
+        form.setValue('user_id', data.user.id)
+      } catch (e) {
+        if (cancelled) return
+        setAuth({
+          kind: 'error',
+          message: e instanceof Error ? e.message : 'Anonymous sign-in failed.',
+        })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Persist on any change.
   useEffect(() => {
     if (!hydrated || !sessionId) return
@@ -150,7 +202,6 @@ export function SignupWizard() {
       session_id: sessionId,
       values,
       step,
-      selfOrPermission,
       override,
       scrolledToBottom,
     }
@@ -160,7 +211,7 @@ export function SignupWizard() {
     } catch {
       // ignore
     }
-  }, [hydrated, sessionId, values, step, selfOrPermission, override, scrolledToBottom])
+  }, [hydrated, sessionId, values, step, override, scrolledToBottom])
 
   // Auto-suggest subdomain when name lands and the user hasn't touched it.
   useEffect(() => {
@@ -178,12 +229,13 @@ export function SignupWizard() {
       case 0: {
         const age = calcAge(values.dob)
         return (
+          EMAIL_RE.test(values.email) &&
           !!values.dob &&
           age !== null &&
           age >= 18 &&
           values.tc_accepted &&
           values.age_confirmed &&
-          selfOrPermission &&
+          values.self_or_permission_attested &&
           scrolledToBottom
         )
       }
@@ -225,7 +277,7 @@ export function SignupWizard() {
       default:
         return false
     }
-  }, [step, values, uniqueness, subdomainState, selfOrPermission, override, scrolledToBottom])
+  }, [step, values, uniqueness, subdomainState, override, scrolledToBottom])
 
   function goNext() {
     if (!canContinue) return
@@ -249,14 +301,11 @@ export function SignupWizard() {
     setSubmitting(true)
     setSubmitNote(null)
     try {
-      // TODO(agent 2 re-prompt): set user_id/email/tier from real sources
-      // (anonymous-auth user_id, email step, tier from URL query). Until
-      // then we copy whatever is in `values`; the contract Zod below will
-      // reject empty strings, so the submit fails closed.
+      const userId = auth.kind === 'ready' ? auth.userId : values.user_id
       const payload: SignupInputType = {
-        user_id: values.user_id,
-        email: values.email,
-        tier: values.tier,
+        user_id: userId,
+        email: values.email.trim(),
+        tier: 'base',
         display_name: values.display_name.trim(),
         subdomain: values.subdomain,
         tagline: values.tagline?.trim() ? values.tagline.trim() : undefined,
@@ -274,7 +323,7 @@ export function SignupWizard() {
         tc_version: TC_VERSION,
         tc_accepted: true,
         age_confirmed: true,
-        self_or_permission_attested: selfOrPermission as true,
+        self_or_permission_attested: true,
       }
 
       // Final guard: run the contract Zod against the assembled payload.
@@ -320,10 +369,29 @@ export function SignupWizard() {
     }
   }
 
-  if (!hydrated || !sessionId) {
+  if (!hydrated || !sessionId || auth.kind === 'pending') {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (auth.kind === 'error') {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 text-center">
+        <OctagonAlertIcon className="size-8 text-destructive" />
+        <h1 className="mt-4 font-heading text-xl font-semibold tracking-tight">
+          We couldn’t start your draft
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">{auth.message}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-6 rounded-lg border bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:opacity-90"
+        >
+          Try again
+        </button>
       </div>
     )
   }
@@ -353,14 +421,18 @@ export function SignupWizard() {
         <form onSubmit={e => e.preventDefault()}>
           {step === 0 && (
             <StepAgeGate
+              email={values.email}
+              setEmail={v => form.setValue('email', v)}
               dob={values.dob}
               setDob={v => form.setValue('dob', v)}
               tcAccepted={values.tc_accepted}
               setTcAccepted={v => form.setValue('tc_accepted', v as true)}
               ageConfirmed={values.age_confirmed}
               setAgeConfirmed={v => form.setValue('age_confirmed', v as true)}
-              selfOrPermission={selfOrPermission}
-              setSelfOrPermission={setSelfOrPermission}
+              selfOrPermission={values.self_or_permission_attested}
+              setSelfOrPermission={v =>
+                form.setValue('self_or_permission_attested', v as true)
+              }
               scrolledToBottom={scrolledToBottom}
               setScrolledToBottom={setScrolledToBottom}
             />
@@ -400,7 +472,7 @@ export function SignupWizard() {
           )}
           {step === 5 && (
             <StepPhotos
-              sessionId={sessionId}
+              userId={auth.userId}
               photos={values.photos}
               setPhotos={next => form.setValue('photos', next)}
             />
@@ -415,8 +487,11 @@ export function SignupWizard() {
             <StepReview
               values={{
                 ...values,
+                user_id: auth.userId,
+                tier: 'base',
                 tc_accepted: true,
                 age_confirmed: true,
+                self_or_permission_attested: true,
                 tc_version: TC_VERSION,
               } as SignupInputType}
               goTo={goTo}

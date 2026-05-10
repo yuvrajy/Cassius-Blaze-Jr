@@ -170,25 +170,14 @@ export async function POST(req: Request) {
   }
 
   if (supabase) {
-    // The Database generic on supabase-js@2.105 is shaped differently from
-    // what the hand-written lib/types/db.ts targets, so query results widen
-    // to `never` at the type level. The cast below is the local workaround;
-    // agent 1 needs to either bump types or call `pnpm dlx supabase gen
-    // types`. Behavior is fine at runtime.
-    const { data: cached } = (await supabase
+    const { data: cached } = await supabase
       .from('name_collision_checks')
       .select('name_normalized, severity, evidence')
       .eq('name_normalized', normalized)
-      .maybeSingle()) as {
-      data: {
-        name_normalized: string
-        severity: number
-        evidence: unknown
-      } | null
-    }
+      .maybeSingle()
 
     if (cached) {
-      const ev = (cached.evidence ?? { results: [] }) as
+      const ev = (cached.evidence ?? { results: [] }) as unknown as
         NameCollisionEvidence & { suggested_variations?: string[]; summary?: string }
       const verdict: NameCollisionVerdict & { suggested_variations: string[] } = {
         name_normalized: cached.name_normalized,
@@ -220,24 +209,18 @@ export async function POST(req: Request) {
     // suggested_variations, but the DB column is JSONB so we can extend it.
     // Agent 5/6 read evidence as JSON; storing the extras here keeps cache
     // hits cheap (no extra Claude call to re-derive variations).
-    // Same supabase generic mismatch as above — cast around it locally.
-    const upsertPayload = {
-      name_normalized: normalized,
-      severity,
-      evidence: {
-        ...evidence,
-        summary,
-        suggested_variations,
+    await supabase.from('name_collision_checks').upsert(
+      {
+        name_normalized: normalized,
+        severity,
+        evidence: {
+          ...evidence,
+          summary,
+          suggested_variations,
+        },
       },
-    }
-    await (
-      supabase.from('name_collision_checks') as unknown as {
-        upsert: (
-          row: typeof upsertPayload,
-          opts: { onConflict: string },
-        ) => Promise<unknown>
-      }
-    ).upsert(upsertPayload, { onConflict: 'name_normalized' })
+      { onConflict: 'name_normalized' },
+    )
   }
 
   return NextResponse.json(verdict)

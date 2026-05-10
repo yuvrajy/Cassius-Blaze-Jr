@@ -7,7 +7,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { TCBox } from './tc-modal'
 import { calcAge } from './types'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export function StepAgeGate({
+  email,
+  setEmail,
   dob,
   setDob,
   tcAccepted,
@@ -19,6 +23,8 @@ export function StepAgeGate({
   scrolledToBottom,
   setScrolledToBottom,
 }: {
+  email: string
+  setEmail: (v: string) => void
   dob: string
   setDob: (v: string) => void
   tcAccepted: boolean
@@ -30,19 +36,42 @@ export function StepAgeGate({
   scrolledToBottom: boolean
   setScrolledToBottom: (v: boolean) => void
 }) {
-  const [touched, setTouched] = useState(false)
+  const [dobTouched, setDobTouched] = useState(false)
+  const [emailTouched, setEmailTouched] = useState(false)
   const age = calcAge(dob)
   const ageError =
-    touched && dob && age !== null && age < 18
+    dobTouched && dob && age !== null && age < 18
       ? 'You must be at least 18 to use getknown.'
+      : null
+  const emailError =
+    emailTouched && email.length > 0 && !EMAIL_RE.test(email)
+      ? 'Use a valid email address.'
       : null
 
   return (
     <div className="space-y-6">
       <Header
         title="A few quick agreements"
-        subtitle="We need to know you’re old enough and that you accept our terms before we publish anything about you."
+        subtitle="We need your email for the receipt and dashboard, and to know you’re old enough before we publish anything about you."
       />
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          onBlur={() => setEmailTouched(true)}
+          placeholder="you@example.com"
+          className="h-10 max-w-md"
+        />
+        <p className="text-xs text-muted-foreground">
+          We’ll email your dashboard link here. No password required.
+        </p>
+        {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="dob">Date of birth</Label>
@@ -51,7 +80,7 @@ export function StepAgeGate({
           type="date"
           value={dob}
           max={new Date().toISOString().slice(0, 10)}
-          onBlur={() => setTouched(true)}
+          onBlur={() => setDobTouched(true)}
           onChange={e => setDob(e.target.value)}
           className="h-10 max-w-xs"
         />
